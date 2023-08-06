@@ -38,7 +38,7 @@ describe("EventListenerMap", () => {
 
       map.set(clickListener);
 
-      assertEquals([...map], [["click", [clickListener]]]);
+      assertEquals([...map], [clickListener]);
     });
 
     it("should return this", () => {
@@ -55,7 +55,7 @@ describe("EventListenerMap", () => {
       map.set(clickListener);
       map.set(clickListener);
 
-      assertEquals([...map], [["click", [clickListener]]]);
+      assertEquals([...map], [clickListener]);
     });
 
     it("should not set if the listener is duplicated", () => {
@@ -64,7 +64,7 @@ describe("EventListenerMap", () => {
       map.set(clickListener);
       map.set({ ...clickListener, passive: true, once: true });
 
-      assertEquals([...map], [["click", [clickListener]]]);
+      assertEquals([...map], [clickListener]);
     });
 
     it("should set if the listener is duplicated", () => {
@@ -73,10 +73,7 @@ describe("EventListenerMap", () => {
       map.set(clickListener);
       map.set(blurListener);
 
-      assertEquals([...map], [
-        ["click", [clickListener]],
-        ["blur", [blurListener]],
-      ]);
+      assertEquals([...map], [clickListener, blurListener]);
     });
 
     it("should set if the listener is duplicated", () => {
@@ -85,9 +82,7 @@ describe("EventListenerMap", () => {
       map.set(clickListener);
       map.set(clickListener2);
 
-      assertEquals([...map], [
-        ["click", [clickListener, clickListener2]],
-      ]);
+      assertEquals([...map], [clickListener, clickListener2]);
     });
 
     it("should set if the listener is duplicated", () => {
@@ -96,9 +91,7 @@ describe("EventListenerMap", () => {
       map.set(clickListener);
       map.set(clickListener2);
 
-      assertEquals([...map], [
-        ["click", [clickListener, clickListener2]],
-      ]);
+      assertEquals([...map], [clickListener, clickListener2]);
     });
   });
 
@@ -129,52 +122,31 @@ describe("EventListenerMap", () => {
       const table: [
         Iterable<Listener>,
         Listener,
-        [type: string, listeners: Listener[]][],
+        Listener[],
       ][] = [
         [[], clickListener, []],
         [[clickListener], clickListener, []],
-        [[clickListener], clickListener2, [["click", [clickListener]]]],
-        [[clickListener, clickListener2], clickListenerNotSameCapture, [[
-          "click",
-          [clickListener, clickListener2],
-        ]]],
-        [[clickListener, clickListener2], clickListener, [[
-          "click",
-          [clickListener2],
-        ]]],
+        [[clickListener], clickListener2, [clickListener]],
+        [[clickListener, clickListener2], clickListenerNotSameCapture, [
+          clickListener,
+          clickListener2,
+        ]],
+        [[clickListener, clickListener2], clickListener, [clickListener2]],
         [[clickListener, blurListener], clickListener2, [
-          [
-            "click",
-            [clickListener],
-          ],
-          [
-            "blur",
-            [blurListener],
-          ],
+          clickListener,
+          blurListener,
         ]],
         [
           [clickListener, clickListener2, clickListenerNotSameCapture],
           blurListener,
-          [
-            [
-              "click",
-              [clickListener, clickListener2, clickListenerNotSameCapture],
-            ],
-          ],
+          [clickListener, clickListener2, clickListenerNotSameCapture],
         ],
         [
           [clickListener, clickListener2, clickListenerNotSameCapture],
           clickListener2,
-          [
-            [
-              "click",
-              [clickListener, clickListenerNotSameCapture],
-            ],
-          ],
+          [clickListener, clickListenerNotSameCapture],
         ],
-        [[clickListener, blurListener], blurListener, [
-          ["click", [clickListener]],
-        ]],
+        [[clickListener, blurListener], blurListener, [clickListener]],
       ];
 
       table.forEach(([listeners, listener, yields]) => {

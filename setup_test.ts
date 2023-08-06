@@ -52,13 +52,13 @@ describe("handleAddEventListener", () => {
     assertEquals(handleAddEventListener(listener, thisArg, args, registry), 1);
     assertSpyCalls(listener, 1);
     assertSpyCallArgs(listener, 0, args);
-    assertEquals([...registry.get(thisArg)!], [["click", [{
+    assertEquals([...registry.get(thisArg)!], [{
       listener: args[1],
       once: false,
       passive: false,
       type: "click",
       useCapture: false,
-    }]]]);
+    }]);
   });
 
   it("should add listener if the registry has it", () => {
@@ -82,10 +82,10 @@ describe("handleAddEventListener", () => {
     );
     assertSpyCalls(addEventListener, 1);
     assertSpyCallArgs(addEventListener, 0, args);
-    assertEquals([...registry.get(thisArg)!], [["click", [clickHandler, {
+    assertEquals([...registry.get(thisArg)!], [clickHandler, {
       ...clickHandler,
       useCapture: true,
-    }]]]);
+    }]);
   });
 });
 

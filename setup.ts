@@ -5,6 +5,7 @@ import { EventListenerMap } from "./map.ts";
 import { normalizeOptions } from "./utils.ts";
 import { eventTargetRegistry } from "./constants.ts";
 import type { EventListeners, Listener } from "./types.ts";
+import { groupBy } from "./deps.ts";
 
 /** Setup options. */
 export interface SetupOptions {
@@ -116,5 +117,9 @@ export function getEventListeners(target: object): EventListeners {
 
   if (!eventMap) return {};
 
-  return Object.fromEntries(eventMap);
+  return groupBy(eventMap, pickType) as EventListeners;
+}
+
+function pickType<T>(obj: { type: T }): T {
+  return obj.type;
 }
