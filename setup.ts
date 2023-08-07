@@ -7,19 +7,6 @@ import { eventTargetRegistry } from "./constants.ts";
 import type { EventListeners, Listener } from "./types.ts";
 import { groupBy } from "./deps.ts";
 
-/** Setup options. */
-export interface SetupOptions {
-  /**
-   * @default EventTarget.prototype.addEventListener
-   */
-  addEventListener?: EventTarget["addEventListener"];
-
-  /**
-   * @default EventTarget.prototype.removeEventListener
-   */
-  removeEventListener?: EventTarget["removeEventListener"];
-}
-
 export interface GetEventListeners {
   (target: object): EventListeners;
 }
@@ -27,13 +14,25 @@ export interface GetEventListeners {
 /** Setup event listener monitoring.
  * Performs a side effect and changes the prototype of `EventTarget`.
  */
-export function setup(options?: SetupOptions): GetEventListeners {
-  const addEventListener = options?.addEventListener ??
-    EventTarget.prototype.addEventListener;
-  const removeEventListener = options?.removeEventListener ??
-    EventTarget.prototype.removeEventListener;
+export function setup(): GetEventListeners {
+  const { addEventListener, removeEventListener } = EventTarget.prototype;
+  const $addEventListener = createAddEventListenerProxy(
+    addEventListener,
+  );
+  const $removeEventListener = createRemoveEventListenerProxy(
+    removeEventListener,
+  );
 
-  const $addEventListener = new Proxy(addEventListener, {
+  EventTarget.prototype.addEventListener = $addEventListener;
+  EventTarget.prototype.removeEventListener = $removeEventListener;
+
+  return getEventListeners;
+}
+
+export function createAddEventListenerProxy(
+  addEventListener: typeof EventTarget.prototype.addEventListener,
+): typeof EventTarget.prototype.addEventListener {
+  return new Proxy(addEventListener, {
     apply: (target, thisArg, argArray) =>
       handleAddEventListener(
         target,
@@ -42,8 +41,12 @@ export function setup(options?: SetupOptions): GetEventListeners {
         eventTargetRegistry,
       ),
   });
+}
 
-  const $removeEventListener = new Proxy(removeEventListener, {
+export function createRemoveEventListenerProxy(
+  removeEventListener: typeof EventTarget.prototype.removeEventListener,
+): typeof EventTarget.prototype.removeEventListener {
+  return new Proxy(removeEventListener, {
     apply: (target, thisArg, argArray) =>
       handlerRemoveEventListener(
         target,
@@ -54,11 +57,6 @@ export function setup(options?: SetupOptions): GetEventListeners {
         eventTargetRegistry,
       ),
   });
-
-  EventTarget.prototype.addEventListener = $addEventListener;
-  EventTarget.prototype.removeEventListener = $removeEventListener;
-
-  return getEventListeners;
 }
 
 export function handleAddEventListener<T extends object, R>(
