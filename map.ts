@@ -1,21 +1,21 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import type { Listener } from "./types.ts";
+import type { EventListener } from "./types.ts";
 import { compositeKey } from "./deps.ts";
 
 type EqualityDeps = "type" | "listener" | "useCapture";
 
-type ComparableListener = Pick<Listener, EqualityDeps>;
+type ComparableListener = Pick<EventListener, EqualityDeps>;
 
 /** Map for event listener. */
 export class EventListenerMap {
-  #eventMap: Map<object, Listener> = new Map();
+  #eventMap: Map<object, EventListener> = new Map();
 
   /** Realm for {@linkcode compositeKey}. */
   #realm = {};
 
-  constructor(listeners: Iterable<Listener> = []) {
+  constructor(listeners: Iterable<EventListener> = []) {
     for (const listener of listeners) this.set(listener);
   }
 
@@ -27,7 +27,7 @@ export class EventListenerMap {
   /** Add {@linkcode listener}.
    * If it already exists, nothing is done.
    */
-  set(listener: Listener): this {
+  set(listener: EventListener): this {
     const key = toKey(this.#realm, listener);
 
     if (this.#eventMap.has(key)) return this;
@@ -47,7 +47,7 @@ export class EventListenerMap {
   }
 
   /** Yield all registered {@link Listener}. */
-  *[Symbol.iterator](): Generator<Listener> {
+  *[Symbol.iterator](): Generator<EventListener> {
     for (const listener of this.#eventMap.values()) yield listener;
   }
 }

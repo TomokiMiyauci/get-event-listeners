@@ -8,4 +8,4 @@ export {
   getEventListeners,
   setup,
 } from "./setup.ts";
-export type { EventListeners, Listener } from "./types.ts";
+export type { EventListener, EventListeners } from "./types.ts";

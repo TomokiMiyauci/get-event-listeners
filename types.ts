@@ -1,7 +1,7 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-export interface Listener extends NormalizedAddEventListenerOptions {
+export interface EventListener extends NormalizedAddEventListenerOptions {
   type: string;
   listener: EventListenerOrEventListenerObject;
 }
@@ -12,5 +12,5 @@ export interface NormalizedAddEventListenerOptions
 }
 
 export interface EventListeners {
-  [k: string]: Listener[];
+  [k: string]: EventListener[];
 }
