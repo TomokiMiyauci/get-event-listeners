@@ -1,41 +1,184 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 
-import { normalizeOptions } from "./utils.ts";
-import { assertEquals, describe, it } from "./_dev_deps.ts";
+import {
+  defaultPassiveValue,
+  flatOptions,
+  flatOptionsMore,
+  isNodeLike,
+  isWindow,
+  NormalizedOptions,
+} from "./utils.ts";
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+  describe,
+  it,
+} from "./_dev_deps.ts";
+import {
+  Document,
+  DOMParser,
+} from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
-describe("normalizeOptions", () => {
-  it("should return all false if the option is undefined, false or empty object", () => {
-    const table: Parameters<typeof normalizeOptions>[0][] = [
-      undefined,
-      false,
-      {},
-      { capture: false },
-      { once: false },
-      { passive: false },
+describe("flatOptions", () => {
+  it("should return boolean", () => {
+    const table: [undefined | boolean | EventListenerOptions, boolean][] = [
+      [undefined, false],
+      [false, false],
+      [true, true],
+      [{ capture: undefined }, false],
+      [{ capture: false }, false],
+      [{ capture: true }, true],
     ];
 
-    table.forEach((options) => {
-      assertEquals(normalizeOptions(options), {
-        useCapture: false,
-        once: false,
-        passive: false,
-      });
+    table.forEach(([input, expected]) => {
+      assertEquals(flatOptions(input), expected);
+    });
+  });
+});
+
+const defaultNormalizedOptions: NormalizedOptions = {
+  capture: false,
+  once: false,
+  passive: null,
+  signal: null,
+};
+
+describe("flatOptionsMore", () => {
+  it("should return boolean", () => {
+    const signal = new AbortController().signal;
+    const table: [
+      undefined | boolean | AddEventListenerOptions,
+      NormalizedOptions,
+    ][] = [
+      [undefined, defaultNormalizedOptions],
+      [false, defaultNormalizedOptions],
+      [true, { ...defaultNormalizedOptions, capture: true }],
+      [{}, defaultNormalizedOptions],
+      [{ capture: false }, defaultNormalizedOptions],
+      [{ capture: true }, { ...defaultNormalizedOptions, capture: true }],
+      [{ once: undefined }, defaultNormalizedOptions],
+      [{ once: false }, defaultNormalizedOptions],
+      [{ once: true }, { ...defaultNormalizedOptions, once: true }],
+      [{ passive: undefined }, defaultNormalizedOptions],
+      [{ passive: false }, { ...defaultNormalizedOptions, passive: false }],
+      [{ passive: true }, { ...defaultNormalizedOptions, passive: true }],
+      [{ signal: undefined }, defaultNormalizedOptions],
+      [{ signal }, { ...defaultNormalizedOptions, signal }],
+      [{ capture: true, passive: true, once: true, signal }, {
+        capture: true,
+        passive: true,
+        once: true,
+        signal,
+      }],
+    ];
+
+    table.forEach(([input, expected]) => {
+      assertEquals(flatOptionsMore(input), expected);
+    });
+  });
+});
+
+describe("isWindow", () => {
+  it("should return true", () => {
+    const table: unknown[] = [
+      window,
+      globalThis.window,
+    ];
+
+    table.forEach((input) => {
+      assert(isWindow(input));
     });
   });
 
-  it("should be capture true if the option is true", () => {
-    assertEquals(normalizeOptions(true), {
-      useCapture: true,
-      once: false,
-      passive: false,
+  it("should return false", () => {
+    const table: unknown[] = [
+      {},
+      null,
+      undefined,
+      [],
+    ];
+
+    table.forEach((input) => {
+      assertFalse(isWindow(input));
+    });
+  });
+});
+
+describe("isNodeLike", () => {
+  it("should return true", () => {
+    const table: object[] = [
+      { ownerDocument: {} },
+      { ownerDocument: null },
+    ];
+
+    table.forEach((input) => {
+      assert(isNodeLike(input));
     });
   });
 
-  it("should return as is", () => {
-    assertEquals(normalizeOptions({ capture: true }), {
-      useCapture: true,
-      once: false,
-      passive: false,
+  it("should return false", () => {
+    const table: object[] = [
+      {},
+      { ownerDocument: undefined },
+      { ownerDocument: "" },
+      { ownerDocument: 0 },
+    ];
+
+    table.forEach((input) => {
+      assertFalse(isNodeLike(input));
     });
+  });
+});
+
+describe("defaultPassiveValue", () => {
+  it("should return true", () => {
+    const document = new Document();
+    const parser = new DOMParser();
+
+    Object.defineProperty(globalThis, "document", {
+      value: document,
+      configurable: true,
+    });
+
+    const table: [string, EventTarget][] = [
+      ["touchstart", window],
+      ["touchmove", window],
+      ["wheel", window],
+      ["mousewheel", window],
+      ["touchstart", parser.parseFromString("", "text/html")?.body!],
+      ["touchstart", parser.parseFromString("", "text/html")?.documentElement!],
+      ["touchstart", document],
+    ];
+
+    table.forEach(([type, target]) => {
+      assert(defaultPassiveValue(type, target));
+    });
+
+    Object.defineProperty(globalThis, "document", { value: undefined });
+  });
+
+  it("should return false", () => {
+    const document = new Document();
+    const parser = new DOMParser();
+
+    Object.defineProperty(globalThis, "document", {
+      value: document,
+      configurable: true,
+    });
+
+    const table: [string, EventTarget][] = [
+      ["click", window],
+      ["touchstart", document.createElement("div")],
+      ["touchstart", parser.parseFromString("", "text/html")?.doctype!],
+      ["touchstart", parser.parseFromString("", "text/html")?.head!],
+      ["touchstart", new EventTarget()],
+    ];
+
+    table.forEach(([type, target]) => {
+      assertFalse(defaultPassiveValue(type, target));
+    });
+
+    Object.defineProperty(globalThis, "document", { value: undefined });
   });
 });

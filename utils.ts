@@ -2,7 +2,7 @@
 // This module is browser compatible.
 
 import { _EventListener } from "./types.ts";
-import { isBoolean } from "./deps.ts";
+import { isBoolean, isObject } from "./deps.ts";
 
 /** To flatten {@linkcode options}.
  * @see https://dom.spec.whatwg.org/#concept-flatten-options
@@ -13,15 +13,21 @@ export function flatOptions(options?: boolean | EventListenerOptions): boolean {
   return Boolean(options?.capture);
 }
 
+export type NormalizedOptions = Pick<
+  _EventListener,
+  keyof AddEventListenerOptions
+>;
+
 /** To flatten {@linkcode options} more.
  * @see https://dom.spec.whatwg.org/#event-flatten-more
  */
 export function flatOptionsMore(
   options?: boolean | AddEventListenerOptions,
-): Pick<_EventListener, "capture" | "once" | "passive" | "signal"> {
+): NormalizedOptions {
   const capture = flatOptions(options);
-  const { once = false, passive = null, signal = null } =
-    typeof options === "object" ? options : {};
+  const { once = false, passive = null, signal = null } = isObject(options)
+    ? options
+    : {};
 
   return { capture, once, passive, signal };
 }
@@ -33,14 +39,19 @@ export function defaultPassiveValue(
   type: string,
   target: EventTarget,
 ): boolean {
-  return touchOrUiEvents.has(type) &&
-    (isWindow(target) ||
-      isNode(target) &&
-        (target.ownerDocument === target ||
-          "documentElement" in target.ownerDocument &&
-            target.ownerDocument.documentElement === target ||
-          "body" in target.ownerDocument &&
-            target.ownerDocument.body === target));
+  if (!touchOrUiEvents.has(type)) return false;
+  if (isWindow(target)) return true;
+  if (!isNodeLike(target)) return false;
+
+  // target is Document
+  if (!target.ownerDocument) {
+    return target === Reflect.get(globalThis, "document");
+  }
+
+  return ("documentElement" in target.ownerDocument &&
+      target.ownerDocument.documentElement === target || // target is HTML document
+    "body" in target.ownerDocument &&
+      target.ownerDocument.body === target); // target is body
 }
 
 const touchOrUiEvents = /*@__PURE__*/ new Set<string>([
@@ -51,12 +62,12 @@ const touchOrUiEvents = /*@__PURE__*/ new Set<string>([
 ]);
 
 interface NodeLike {
-  readonly ownerDocument: object;
+  readonly ownerDocument: object | null;
 }
 
-function isNode(input: object): input is NodeLike {
-  return "ownerDocument" in input && !!input.ownerDocument &&
-    typeof input.ownerDocument === "object";
+/** Whether the {@linkcode input} is {@linkcode NodeLike} or not. */
+export function isNodeLike(input: object): input is NodeLike {
+  return "ownerDocument" in input && typeof input.ownerDocument === "object";
 }
 
 /** Whether the {@linkcode input} is {@linkcode Window} or not.
