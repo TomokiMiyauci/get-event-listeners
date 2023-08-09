@@ -7,6 +7,8 @@ import {
   isNodeLike,
   isWindow,
   NormalizedOptions,
+  toHandler,
+  toKey,
 } from "./utils.ts";
 import {
   assert,
@@ -19,6 +21,7 @@ import {
   Document,
   DOMParser,
 } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { ComparableEventListener } from "./types.ts";
 
 describe("flatOptions", () => {
   it("should return boolean", () => {
@@ -180,5 +183,93 @@ describe("defaultPassiveValue", () => {
     });
 
     Object.defineProperty(globalThis, "document", { value: undefined });
+  });
+});
+
+describe("toHandler", () => {
+  it("should return bound handleEvent method", () => {
+    class Component implements EventListenerObject {
+      #value = false;
+      handleEvent(): void | Promise<void> {
+        this.#value;
+      }
+    }
+
+    const handler = toHandler(new Component());
+
+    assert(typeof handler === "function");
+    assertFalse(handler(new Event("")));
+  });
+
+  it("should return as is", () => {
+    function callback() {}
+
+    assert(callback === toHandler(callback));
+  });
+});
+
+describe("toKey", () => {
+  it("should equals", () => {
+    const callback = () => {};
+    const object: EventListenerObject = {
+      handleEvent: callback,
+    };
+
+    const table: [
+      left: ComparableEventListener,
+      right: ComparableEventListener,
+    ][] = [
+      [{ callback, type: "click", capture: false }, {
+        callback,
+        type: "click",
+        capture: false,
+      }],
+      [{ callback, type: "click", capture: true }, {
+        callback,
+        type: "click",
+        capture: true,
+      }],
+      [{ callback: object, type: "blur", capture: false }, {
+        callback: object,
+        type: "blur",
+        capture: false,
+      }],
+    ];
+
+    table.forEach(([left, right]) => {
+      assert(toKey(left) === toKey(right));
+    });
+  });
+
+  it("should not equals", () => {
+    const callback = () => {};
+    const object: EventListenerObject = {
+      handleEvent: callback,
+    };
+
+    const table: [
+      left: ComparableEventListener,
+      right: ComparableEventListener,
+    ][] = [
+      [{ callback, type: "click", capture: false }, {
+        callback,
+        type: "blur",
+        capture: false,
+      }],
+      [{ callback, type: "click", capture: false }, {
+        callback,
+        type: "click",
+        capture: true,
+      }],
+      [{ callback, type: "blur", capture: false }, {
+        callback: object,
+        type: "blur",
+        capture: false,
+      }],
+    ];
+
+    table.forEach(([left, right]) => {
+      assert(toKey(left) !== toKey(right));
+    });
   });
 });

@@ -1,8 +1,8 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { _EventListener } from "./types.ts";
-import { isBoolean, isObject } from "./deps.ts";
+import { _EventListener, ComparableEventListener } from "./types.ts";
+import { compositeKey, isBoolean, isFunction, isObject } from "./deps.ts";
 
 /** To flatten {@linkcode options}.
  * @see https://dom.spec.whatwg.org/#concept-flatten-options
@@ -75,4 +75,18 @@ export function isNodeLike(input: object): input is NodeLike {
  */
 export function isWindow(input: unknown): input is Window {
   return globalThis.Window && input instanceof globalThis.Window;
+}
+
+/** {@linkcode listener} to Function.
+ * if {@linkcode listener} is function, return it; otherwise return bound `handleEvent`.
+ */
+export function toHandler(
+  listener: EventListenerOrEventListenerObject,
+): EventListener {
+  return isFunction(listener) ? listener : listener.handleEvent.bind(listener);
+}
+
+/** Return {@linkcode listener} representation key. */
+export function toKey(listener: ComparableEventListener): object {
+  return compositeKey(listener.callback, listener.type, listener.capture);
 }
