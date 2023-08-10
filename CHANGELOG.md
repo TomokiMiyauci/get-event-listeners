@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/TomokiMiyauci/get-event-listeners/compare/1.0.0-beta.1...1.0.0-beta.2) (2023-08-10)
+
+
+### Features
+
+* **listener:** extend accept argument ([2e59c92](https://github.com/TomokiMiyauci/get-event-listeners/commit/2e59c92b65deb10665972428bf79cc16065afc00))
+
 # 1.0.0-beta.1 (2023-08-10)
 
 
