@@ -1,8 +1,11 @@
 // Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
 // This module is browser compatible.
 
-import { _EventListener, ComparableEventListener } from "./types.ts";
 import { compositeKey, isBoolean, isFunction, isObject } from "./deps.ts";
+import type {
+  ComparableEventListenerLike,
+  EventListenerLike,
+} from "./types.ts";
 
 /** To flatten {@linkcode options}.
  * @see https://dom.spec.whatwg.org/#concept-flatten-options
@@ -14,7 +17,7 @@ export function flatOptions(options?: boolean | EventListenerOptions): boolean {
 }
 
 export type NormalizedOptions = Pick<
-  _EventListener,
+  EventListenerLike,
   keyof AddEventListenerOptions
 >;
 
@@ -87,6 +90,6 @@ export function toHandler(
 }
 
 /** Return {@linkcode listener} representation key. */
-export function toKey(listener: ComparableEventListener): object {
+export function toKey(listener: ComparableEventListenerLike): object {
   return compositeKey(listener.callback, listener.type, listener.capture);
 }

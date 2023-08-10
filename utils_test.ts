@@ -21,7 +21,7 @@ import {
   Document,
   DOMParser,
 } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
-import { ComparableEventListener } from "./types.ts";
+import { ComparableEventListenerLike } from "./types.ts";
 
 describe("flatOptions", () => {
   it("should return boolean", () => {
@@ -216,8 +216,8 @@ describe("toKey", () => {
     };
 
     const table: [
-      left: ComparableEventListener,
-      right: ComparableEventListener,
+      left: ComparableEventListenerLike,
+      right: ComparableEventListenerLike,
     ][] = [
       [{ callback, type: "click", capture: false }, {
         callback,
@@ -248,8 +248,8 @@ describe("toKey", () => {
     };
 
     const table: [
-      left: ComparableEventListener,
-      right: ComparableEventListener,
+      left: ComparableEventListenerLike,
+      right: ComparableEventListenerLike,
     ][] = [
       [{ callback, type: "click", capture: false }, {
         callback,

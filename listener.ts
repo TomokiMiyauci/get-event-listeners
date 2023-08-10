@@ -8,13 +8,13 @@ import {
   toHandler,
   toKey,
 } from "./utils.ts";
-import {
-  _EventListener,
-  ComparableEventListener,
+import type {
+  ComparableEventListenerLike,
+  DetailEventListener,
   EventListener,
+  EventListenerLike,
   EventListenerRegistry,
   EventListeners,
-  WithListener,
 } from "./types.ts";
 import { groupBy, insert, isNull } from "./deps.ts";
 
@@ -25,7 +25,7 @@ import { groupBy, insert, isNull } from "./deps.ts";
  */
 export function addAnEventListener(
   target: Readonly<EventTarget>,
-  listener: Readonly<_EventListener & WithListener>,
+  listener: Readonly<DetailEventListener>,
   registry: EventListenerRegistry,
 ): void {
   const { type, signal, callback } = listener;
@@ -65,17 +65,16 @@ export function addAnEventListener(
  */
 export function removeAnEventListener(
   target: Readonly<EventTarget>,
-  listener: Readonly<ComparableEventListener>,
+  listener: Readonly<ComparableEventListenerLike>,
   registry: EventListenerRegistry,
 ): void {
   // 1. If eventTarget is a ServiceWorkerGlobalScope object and its service worker’s set of event types to handle contains listener’s type, then report a warning to the console that this might not give the expected results. [SERVICE-WORKERS]
 
   const eventListenerList = registry.get(target);
-  if (eventListenerList) {
-    const key = toKey(listener);
 
+  if (eventListenerList) {
     // 2. Set listener’s removed to true and remove listener from eventTarget’s event listener list.
-    eventListenerList.delete(key);
+    eventListenerList.delete(toKey(listener));
   }
 }
 
@@ -163,21 +162,31 @@ function handleAddition<R>(
   if (!callback) return target.apply(thisArg, argArray);
 
   const { once, ...rest } = flatOptionsMore(options);
-  const eventListener = new _EventListener({ type, callback, once, ...rest });
-  const listener = once
+  const overrodeCallback = once
     ? new Proxy(toHandler(callback), { apply: handleApply })
-    : callback;
+    : undefined;
+  const listener: DetailEventListener = {
+    type,
+    callback,
+    once,
+    ...rest,
+    overrodeCallback,
+  };
 
-  addAnEventListener(thisArg, { ...eventListener, listener }, registry);
+  addAnEventListener(thisArg, listener, registry);
 
-  return target.apply(thisArg, [type, listener, options]);
+  return target.apply(thisArg, [
+    type,
+    listener.overrodeCallback ?? listener.callback,
+    options,
+  ]);
 
   function handleApply(
     target: globalThis.EventListener,
     thisArg: EventTarget,
     argArray: [Event],
   ): void | Promise<void> {
-    removeAnEventListener(thisArg, eventListener, registry);
+    removeAnEventListener(thisArg, listener, registry);
 
     return target.apply(thisArg, argArray);
   }
@@ -204,13 +213,16 @@ function handleRemoval(
 
   if (!listenerMap.has(key)) return target.apply(thisArg, argArray);
 
-  const { listener } = listenerMap.get(key)!;
+  const eventListener = listenerMap.get(key)!;
+
   listenerMap.delete(key);
+
+  const listener = eventListener.overrodeCallback ?? eventListener.callback;
 
   return target.apply(thisArg, [type, listener, options]);
 }
 
-function _listener2Listener(listener: _EventListener): EventListener {
+function _listener2Listener(listener: EventListenerLike): EventListener {
   const { type, capture: useCapture, passive, once } = listener;
 
   return {
@@ -222,6 +234,9 @@ function _listener2Listener(listener: _EventListener): EventListener {
   };
 }
 
+/** Setup event listener monitoring.
+ * Performs a side effect and changes the prototype of `EventTarget`.
+ */
 export function updateEventListener(): GetEventListeners {
   const registry = new WeakMap();
   const context = createContext(registry);
