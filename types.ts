@@ -50,3 +50,6 @@ export interface DetailEventListener extends EventListenerLike {
 export type EventListenerRegistry = WeakMap<object, EventListenerMap>;
 
 export type EventListenerMap = Map<object, DetailEventListener>;
+
+export type AddEventListener = EventTarget["addEventListener"];
+export type RemoveEventListener = EventTarget["removeEventListener"];

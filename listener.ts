@@ -9,12 +9,14 @@ import {
   toKey,
 } from "./utils.ts";
 import type {
+  AddEventListener,
   ComparableEventListenerLike,
   DetailEventListener,
   EventListener,
   EventListenerLike,
   EventListenerRegistry,
   EventListeners,
+  RemoveEventListener,
 } from "./types.ts";
 import { groupBy, insert, isNull } from "./deps.ts";
 
@@ -149,12 +151,9 @@ export function createGetEventListener(
 }
 
 function handleAddition<R>(
-  target: (
-    this: EventTarget,
-    ...args: Parameters<typeof EventTarget.prototype.addEventListener>
-  ) => R,
+  target: (this: EventTarget, ...args: Parameters<AddEventListener>) => R,
   thisArg: EventTarget,
-  argArray: Parameters<typeof EventTarget.prototype.addEventListener>,
+  argArray: Parameters<AddEventListener>,
   registry: EventListenerRegistry,
 ): R {
   const [type, callback, options] = argArray;
@@ -193,12 +192,9 @@ function handleAddition<R>(
 }
 
 function handleRemoval(
-  target: (
-    this: EventTarget,
-    ...args: Parameters<typeof EventTarget.prototype.removeEventListener>
-  ) => void,
+  target: (this: EventTarget, ...args: Parameters<RemoveEventListener>) => void,
   thisArg: EventTarget,
-  argArray: Parameters<typeof EventTarget.prototype.removeEventListener>,
+  argArray: Parameters<RemoveEventListener>,
   registry: EventListenerRegistry,
 ): void {
   const [type, callback, options] = argArray;
@@ -247,9 +243,6 @@ export function updateEventListener(): GetEventListeners {
   return context.getEventListeners;
 }
 
-type AddEventListener = EventTarget["addEventListener"];
-type RemoveEventListener = EventTarget["removeEventListener"];
-
 export interface EventListenerContext {
   addEventListener: AddEventListener;
   removeEventListener: RemoveEventListener;
@@ -260,7 +253,7 @@ export interface GetEventListeners {
   (target: EventTarget): EventListeners;
 }
 
-type ContextOptions = Partial<
+export type ContextOptions = Partial<
   Pick<EventListenerContext, "addEventListener" | "removeEventListener">
 >;
 
