@@ -2,10 +2,8 @@
 // This module is browser compatible.
 
 export {
-  createAddEventListenerProxy,
-  createRemoveEventListenerProxy,
+  createContext,
   type GetEventListeners,
-  getEventListeners,
-  setup,
-} from "./setup.ts";
+  updateEventListener,
+} from "./listener.ts";
 export type { EventListener, EventListeners } from "./types.ts";
