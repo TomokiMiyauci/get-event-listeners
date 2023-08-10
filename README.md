@@ -1,7 +1,33 @@
 # get-event-listeners
 
+[![deno land](http://img.shields.io/badge/available%20on-deno.land/x-lightgrey.svg?logo=deno)](https://deno.land/x/get_event_listeners)
+[![deno doc](https://doc.deno.land/badge.svg)](https://deno.land/x/get_event_listeners?doc)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/TomokiMiyauci/get-event-listeners)](https://github.com/TomokiMiyauci/get-event-listeners/releases)
+[![codecov](https://codecov.io/github/TomokiMiyauci/get-event-listeners/branch/main/graph/badge.svg)](https://codecov.io/gh/TomokiMiyauci/get-event-listeners)
+[![License](https://img.shields.io/github/license/TomokiMiyauci/get-event-listeners)](LICENSE)
+
+[![test](https://github.com/TomokiMiyauci/get-event-listeners/actions/workflows/test.yaml/badge.svg)](https://github.com/TomokiMiyauci/get-event-listeners/actions/workflows/test.yaml)
+[![NPM](https://nodei.co/npm/@miyauci/get-event-listeners.png?mini=true)](https://nodei.co/npm/@miyauci/get-event-listeners/)
+[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg)](https://github.com/RichardLitt/standard-readme)
+[![semantic-release: angular](https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
+
 Ponyfill for
 [`getEventListeners`](https://developer.chrome.com/docs/devtools/console/utilities/#getEventListeners-function).
+
+## Table of Contents <!-- omit in toc -->
+
+- [Install](#install)
+- [Usage](#usage)
+  - [Linkage](#linkage)
+    - [Abort signal](#abort-signal)
+    - [Once](#once)
+  - [Default passive](#default-passive)
+    - [The DOM](#the-dom)
+  - [Pure context](#pure-context)
+- [Compatibility](#compatibility)
+- [API](#api)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Install
 
