@@ -45,6 +45,34 @@ assertEquals(getEventListeners(target), {
 });
 ```
 
+### Live update
+
+If `signal` aborts, the return value of `getEventListeners` is also changed.
+This is strictly according to the specification.
+
+```ts
+import {
+  type EventListener,
+  updateEventListener,
+} from "https://deno.land/x/get_event_listeners/mod.ts";
+import { assert, assertEquals } from "https://deno.land/std/testing/asserts.ts";
+
+const getEventListeners = updateEventListener();
+declare const target: EventTarget;
+declare const controller: AbortController;
+declare const handleClick: () => void;
+declare const listener: EventListener;
+
+assert(!controller.signal.aborted);
+target.addEventListener("click", handleClick, { signal: controller.signal });
+
+assertEquals(getEventListeners(target), { click: [listener] });
+
+controller.abort();
+assertEquals(getEventListeners(target), {});
+assert(controller.signal.aborted);
+```
+
 ### Pure context
 
 The `updateEventListener` has a side effect instead of being immediately
