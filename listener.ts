@@ -80,10 +80,9 @@ export function removeAnEventListener(
   }
 }
 
-export function getEventListenersWithContext(context: {
-  target: EventTarget;
-  registry: EventListenerRegistry;
-}): EventListeners {
+export function getEventListenersWithContext(
+  context: { target: object; registry: EventListenerRegistry },
+): EventListeners {
   const eventListeners = context.registry.get(context.target);
 
   if (!eventListeners) return {};
@@ -143,7 +142,7 @@ export function createGetEventListener(
   /** Get {@linkcode EventListeners}.
    * Before this can be done, {@linkcode setup} must be performed.
    */
-  function getEventListeners(target: EventTarget): EventListeners {
+  function getEventListeners(target: object): EventListeners {
     return getEventListenersWithContext({ target, registry });
   }
 
@@ -250,7 +249,7 @@ export interface EventListenerContext {
 }
 
 export interface GetEventListeners {
-  (target: EventTarget): EventListeners;
+  (target: object): EventListeners;
 }
 
 export interface ContextOptions extends
