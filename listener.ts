@@ -104,7 +104,7 @@ export function createAddEventListener(
     apply: (
       target,
       thisArg: EventTarget | undefined,
-      argArray: Parameters<EventTarget["addEventListener"]>,
+      argArray: Parameters<AddEventListener>,
     ) =>
       handleAddition(
         target,
@@ -139,9 +139,7 @@ export function createRemoveEventListener(
 export function createGetEventListener(
   registry: EventListenerRegistry,
 ): GetEventListeners {
-  /** Get {@linkcode EventListeners}.
-   * Before this can be done, {@linkcode setup} must be performed.
-   */
+  /** Get {@linkcode EventListeners}. */
   function getEventListeners(target: object): EventListeners {
     return getEventListenersWithContext({ target, registry });
   }
@@ -249,6 +247,7 @@ export interface EventListenerContext {
 }
 
 export interface GetEventListeners {
+  /** Get {@linkcode target} {@linkcode EventListeners}. */
   (target: object): EventListeners;
 }
 
