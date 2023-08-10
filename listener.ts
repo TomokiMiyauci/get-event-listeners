@@ -234,13 +234,13 @@ function _listener2Listener(listener: EventListenerLike): EventListener {
  * Performs a side effect and changes the prototype of `EventTarget`.
  */
 export function updateEventListener(): GetEventListeners {
-  const registry = new WeakMap();
-  const context = createContext(registry);
+  const { addEventListener, removeEventListener, getEventListeners } =
+    createContext();
 
-  EventTarget.prototype.addEventListener = context.addEventListener;
-  EventTarget.prototype.removeEventListener = context.removeEventListener;
+  EventTarget.prototype.addEventListener = addEventListener;
+  EventTarget.prototype.removeEventListener = removeEventListener;
 
-  return context.getEventListeners;
+  return getEventListeners;
 }
 
 export interface EventListenerContext {
@@ -253,18 +253,19 @@ export interface GetEventListeners {
   (target: EventTarget): EventListeners;
 }
 
-export type ContextOptions = Partial<
-  Pick<EventListenerContext, "addEventListener" | "removeEventListener">
->;
+export interface ContextOptions extends
+  Partial<
+    Pick<EventListenerContext, "addEventListener" | "removeEventListener">
+  > {
+  registry?: EventListenerRegistry;
+}
 
-export function createContext(
-  registry: EventListenerRegistry,
-  options?: ContextOptions,
-): EventListenerContext {
+export function createContext(options?: ContextOptions): EventListenerContext {
   const add = options?.addEventListener ??
     EventTarget.prototype.addEventListener;
   const remove = options?.removeEventListener ??
     EventTarget.prototype.removeEventListener;
+  const registry = options?.registry ?? new WeakMap();
   const addEventListener = createAddEventListener({
     addEventListener: add,
     registry,

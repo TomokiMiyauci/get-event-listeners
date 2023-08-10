@@ -10,10 +10,8 @@ import {
   spy,
 } from "./_dev_deps.ts";
 
-const map = new Map();
-
 const { getEventListeners, addEventListener, removeEventListener } =
-  createContext(map);
+  createContext();
 
 describe("e2e", () => {
   beforeAll(function () {
