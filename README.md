@@ -45,7 +45,7 @@ assertEquals(getEventListeners(target), {
 });
 ```
 
-### Live update
+### Synchronous
 
 If `signal` aborts, the return value of `getEventListeners` is also changed.
 This is strictly according to the specification.
@@ -55,22 +55,102 @@ import {
   type EventListener,
   updateEventListener,
 } from "https://deno.land/x/get_event_listeners/mod.ts";
-import { assert, assertEquals } from "https://deno.land/std/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+} from "https://deno.land/std/testing/asserts.ts";
 
 const getEventListeners = updateEventListener();
 declare const target: EventTarget;
 declare const controller: AbortController;
-declare const handleClick: () => void;
+declare const callback: () => void;
+declare const event: string;
 declare const listener: EventListener;
 
-assert(!controller.signal.aborted);
-target.addEventListener("click", handleClick, { signal: controller.signal });
-
-assertEquals(getEventListeners(target), { click: [listener] });
+assertFalse(controller.signal.aborted);
+target.addEventListener(event, callback, { signal: controller.signal });
+assertEquals(getEventListeners(target), { [event]: [listener] });
 
 controller.abort();
-assertEquals(getEventListeners(target), {});
 assert(controller.signal.aborted);
+assertEquals(getEventListeners(target), {});
+```
+
+#### Once
+
+Synchronized when an event listener with `once` set is called.
+
+```ts
+import {
+  type EventListener,
+  updateEventListener,
+} from "https://deno.land/x/get_event_listeners/mod.ts";
+import {
+  assert,
+  assertEquals,
+  assertFalse,
+} from "https://deno.land/std/testing/asserts.ts";
+
+const getEventListeners = updateEventListener();
+declare const target: EventTarget;
+declare const callback: () => void;
+declare const event: string;
+declare const listener: EventListener;
+
+target.addEventListener(event, callback, { once: true });
+assertEquals(getEventListeners(target), { [event]: [listener] });
+
+target.dispatchEvent(new Event(event));
+assertEquals(getEventListeners(target), {});
+```
+
+### Default passive
+
+The default `passive` is determined according to
+[default passive value](https://dom.spec.whatwg.org/#default-passive-value).
+
+```ts
+import {
+  type EventListener,
+  updateEventListener,
+} from "https://deno.land/x/get_event_listeners/mod.ts";
+import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
+
+const getEventListeners = updateEventListener();
+declare const callback: () => void;
+declare const listener: EventListener;
+
+addEventListener("touchstart", callback);
+assertEquals(getEventListeners(window), {
+  touchstart: [{ ...listener, passive: true }],
+});
+```
+
+#### The DOM
+
+The default `passive` is also defined for `Document`, `HTMLHtmlElement` and
+`HTMLBodyElement`.
+
+```ts
+/// <reference lib="dom" />
+import {
+  type EventListener,
+  updateEventListener,
+} from "https://deno.land/x/get_event_listeners/mod.ts";
+import { assert, assertEquals } from "https://deno.land/std/testing/asserts.ts";
+
+const getEventListeners = updateEventListener();
+declare const callback: () => void;
+declare const listener: EventListener;
+declare const document: Document;
+
+assert(globalThis.document === document);
+
+document.addEventListener("touchend", callback);
+assertEquals(getEventListeners(document), {
+  touchend: [{ ...listener, passive: true }],
+});
 ```
 
 ### Pure context
