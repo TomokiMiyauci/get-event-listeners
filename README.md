@@ -1,6 +1,6 @@
 # get-event-listeners
 
-Polyfill for
+Ponyfill for
 [`getEventListeners`](https://developer.chrome.com/docs/devtools/console/utilities/#getEventListeners-function).
 
 ## Install
@@ -19,17 +19,16 @@ npm i @miyauci/get-event-listeners
 
 ## Usage
 
-`setup` function replaces `addEventListener` and `removeEventListener` in
-`EventTarget.prototype` with a proxy.
+`updateEventListener` function replaces `addEventListener` and
+`removeEventListener` in `EventTarget.prototype` with a proxy.
 
-You can refer to the currently registered event listeners with
-`getEventListeners`.
+You can refer to the currently registered event listeners with return value.
 
 ```ts
-import { setup } from "https://deno.land/x/get_event_listeners/mod.ts";
+import { updateEventListener } from "https://deno.land/x/get_event_listeners/mod.ts";
 import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
 
-const getEventListeners = setup();
+const getEventListeners = updateEventListener();
 
 declare const target: EventTarget;
 declare const handleClick: () => void;
@@ -46,29 +45,15 @@ assertEquals(getEventListeners(target), {
 });
 ```
 
-or
+### Pure context
+
+The `updateEventListener` has a side effect instead of being immediately
+available.
+
+We provide a pure context builder with no side effects.
 
 ```ts
-import {
-  getEventListeners,
-  setup,
-} from "https://deno.land/x/get_event_listeners/mod.ts";
-
-setup();
-declare const target: EventTarget;
-getEventListeners(target);
-```
-
-### Proxy builder
-
-Provides a low level API that creates a proxy for the listener. This is useful
-when controlling side effects such as testing.
-
-```ts
-import {
-  createAddEventListenerProxy,
-  createRemoveEventListenerProxy,
-} from "https://deno.land/x/get_event_listeners/mod.ts";
+import { createContext } from "https://deno.land/x/get_event_listeners/mod.ts";
 import {
   afterEach,
   beforeEach,
@@ -76,20 +61,17 @@ import {
 } from "https://deno.land/std/testing/bdd.ts";
 
 const { addEventListener, removeEventListener } = EventTarget.prototype;
-const $addEventListener = createAddEventListenerProxy(addEventListener);
-const $removeEventListener = createRemoveEventListenerProxy(
-  removeEventListener,
-);
+const context = createContext({ addEventListener, removeEventListener });
 
 describe("event listener monitoring", () => {
   beforeEach(() => {
-    EventTarget.prototype = $addEventListener;
-    EventTarget.prototype = $removeEventListener;
+    EventTarget.prototype.addEventListener = context.addEventListener;
+    EventTarget.prototype.removeEventListener = context.removeEventListener;
   });
 
   afterEach(() => {
-    EventTarget.prototype = addEventListener;
-    EventTarget.prototype = removeEventListener;
+    EventTarget.prototype.addEventListener = addEventListener;
+    EventTarget.prototype.removeEventListener = removeEventListener;
   });
 });
 ```
@@ -110,10 +92,10 @@ Like `addEventListener`, you can be sure that duplicate listeners will not be
 registered in the registry either.
 
 ```ts
-import { setup } from "https://deno.land/x/get_event_listeners/mod.ts";
+import { updateEventListener } from "https://deno.land/x/get_event_listeners/mod.ts";
 import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
 
-const getEventListeners = setup();
+const getEventListeners = updateEventListener();
 
 declare const target: EventTarget;
 declare const handleClick: () => void;
@@ -141,7 +123,7 @@ assertEquals(getEventListeners(target), expected);
 target.addEventListener("click", handleClick);
 target.addEventListener("click", handleClick, true);
 target.addEventListener("click", handleClick, { capture: true });
-target.addEventListener("click", handleClick, { only: true });
+target.addEventListener("click", handleClick, { once: true });
 target.addEventListener("click", handleClick, { passive: true });
 
 assertEquals(getEventListeners(target), expected);
