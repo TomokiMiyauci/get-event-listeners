@@ -1,3 +1,5 @@
+// Copyright © 2023 Tomoki Miyauchi. All rights reserved. MIT license.
+
 import { createContext } from "./listener.ts";
 import {
   assert,
