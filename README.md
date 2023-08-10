@@ -45,10 +45,14 @@ assertEquals(getEventListeners(target), {
 });
 ```
 
-### Synchronous
+### Linkage
+
+As soon as an event listener is removed, the return value of `getEventListeners`
+is also changed.
+
+#### Abort signal
 
 If `signal` aborts, the return value of `getEventListeners` is also changed.
-This is strictly according to the specification.
 
 ```ts
 import {
@@ -79,7 +83,8 @@ assertEquals(getEventListeners(target), {});
 
 #### Once
 
-Synchronized when an event listener with `once` set is called.
+If listener with `once` is called, the return value of `getEventListeners` is
+also changed.
 
 ```ts
 import {
@@ -182,59 +187,6 @@ describe("event listener monitoring", () => {
     EventTarget.prototype.removeEventListener = removeEventListener;
   });
 });
-```
-
-### Event listener equality
-
-Event listeners are managed by `WeakMap`(called registry) throughout the realm.
-
-Equivalence checks for event listener are performed, equivalent to
-`addEventListener` and `removeEventListener`.
-
-- `addEventListener` Add an event listener to the registry only if one of
-  [`type`, `listener`, `useCapture`] is different from the existing one
-- `removeEventListener` Remove the event listener from the registry only if
-  [`type`, `listener`, `useCapture`] match
-
-Like `addEventListener`, you can be sure that duplicate listeners will not be
-registered in the registry either.
-
-```ts
-import { updateEventListener } from "https://deno.land/x/get_event_listeners/mod.ts";
-import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
-
-const getEventListeners = updateEventListener();
-
-declare const target: EventTarget;
-declare const handleClick: () => void;
-const expected = {
-  click: [{
-    type: "click",
-    listener: handleClick,
-    useCapture: false,
-    once: false,
-    passive: false,
-  }, {
-    type: "click",
-    listener: handleClick,
-    useCapture: true,
-    once: false,
-    passive: false,
-  }],
-};
-
-target.addEventListener("click", handleClick);
-target.addEventListener("click", handleClick, true);
-
-assertEquals(getEventListeners(target), expected);
-
-target.addEventListener("click", handleClick);
-target.addEventListener("click", handleClick, true);
-target.addEventListener("click", handleClick, { capture: true });
-target.addEventListener("click", handleClick, { once: true });
-target.addEventListener("click", handleClick, { passive: true });
-
-assertEquals(getEventListeners(target), expected);
 ```
 
 ## Compatibility
