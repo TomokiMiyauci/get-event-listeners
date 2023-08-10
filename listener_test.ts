@@ -300,14 +300,14 @@ describe("e2e", () => {
     target.addEventListener("click", callback, { signal: controller.signal });
 
     assertEquals(
-      getEventListeners(controller.signal).abort.length,
+      getEventListeners(controller.signal).abort?.length,
       2,
       "it should length 2 because the original addEventListener also add abort listener",
     );
     controller.abort();
 
     assertEquals(
-      getEventListeners(controller.signal).abort.length,
+      getEventListeners(controller.signal).abort?.length,
       1,
       "it should length 1 because the abort listener registered by original addEventListener is not `once`. It is right that it is not once?",
     );
